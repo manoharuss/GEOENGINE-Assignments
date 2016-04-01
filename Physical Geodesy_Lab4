@@ -1,0 +1,290 @@
+clear all; clc; close all;
+
+% Given numerical values
+
+Rc=3500000; % Radius of the Core (in m)
+
+rho_c=10500; % Density of the Core (in kg/m^3)
+
+Rm=6400000; % Radius of the Mantle (in m)
+
+rho_m=4500; % Density of the Mantle (in kg/m^3)
+
+% Coordinates of intervals:
+
+XI=0:25000:4*Rm;
+
+YI=0:25000:4*Rm;
+
+% Compute the Gravitational potential
+
+v_Sphere=V_sphere(XI,YI,Rc,rho_c);
+
+v_Shell=V_shell(Rc,Rm,rho_m,XI,YI);
+
+V=v_Sphere+v_Shell;
+
+% compute the attraction
+
+[ax ay]=a_shell(Rc,Rm,rho_m,XI,YI);
+
+ax_Shell=ax;
+
+ay_Shell=ay;
+
+[ax ay]=a_sphere(XI,YI,Rc,0,0,rho_c);
+
+ax_Sphere=ax;
+
+ay_Sphere=ay;
+
+ax=ax_Shell+ax_Sphere;
+
+ay=ay_Shell+ay_Sphere;
+
+a=sqrt(ax.^2+ay.^2);
+
+% Plot the gravitational potential
+
+figure(1);grid on;hold on;
+
+plot(sign(XI).*sqrt(XI.^2+YI.^2),V,'b','LineWidth',2);
+
+xlabel('r (m)');ylabel('V (m^2/s^2)');
+
+title('Gravitational potential of the Spherical shells');
+
+% Plot indicating the core and mantle
+
+figure(2);grid on;hold on;
+
+plot(sign(XI).*sqrt(XI.^2+YI.^2),V,'b','LineWidth',2);
+
+xlabel('r (m)');ylabel('V (m^2/s^2)');
+
+title('Gravitational potential of the Spherical shells');
+
+X = [Rc Rc]; Y = [0 12*10^7];
+
+line(X,Y,'Color','r');
+
+X = [Rm Rm]; Y = [0 12*10^7];
+
+line(X,Y,'Color','g');
+
+text(0.25*10^7,1*10^7,' Rcore ');
+
+text(0.50*10^7,0.75*10^7,' Rmantle ');
+
+% plot the attraction
+
+figure(3);grid on;hold on;
+
+plot(sign(XI).*sqrt(XI.^2+YI.^2),-sign(ax).*a,'b','LineWidth',2);
+
+title('Gravitational attraction of the Spherical shells');
+
+xlabel('r (m)'); ylabel('a (m/s^2)');
+
+% Plot indicating the core and mantle
+
+figure(4);grid on;hold on;
+
+plot(sign(XI).*sqrt(XI.^2+YI.^2),-sign(ax).*a,'b','LineWidth',2);
+
+title('Gravitational attraction of the Spherical shells');
+
+xlabel('r (m)'); ylabel('a (m/s^2)');
+
+X = [Rc Rc];Y = [0 12];
+
+line(X,Y,'Color','r')
+
+X = [Rm Rm];Y = [0 12];
+
+line(X,Y,'Color','g');
+
+text(0.25*10^7,1,' Rcore ');
+
+text(0.50*10^7,1.5,' Rmantle ');
+
+% The function computes the potential of the sphere
+
+% input values to the function are
+
+% X = coordinate of the interval
+
+% Y = coordinate of the interval
+
+% R = radius (in m)
+
+% density (in kg/m^3)
+
+% output of the function
+
+% V = array of potential (in [m2/s2]))
+
+function [V]=V_sphere(X,Y,R,density)
+
+ G=6.672e-11; % in m^3*s^-2*kg-1
+
+ r=sqrt((X).^2+(Y).^2);
+
+ % r<=R
+
+ V_interior=(2*pi*G*density) .* (R^2-r.^2./3);
+
+ % r>R
+
+ V_exterior=( 4/3*pi*G*density*R^3 ./ r );
+
+ Interior=(r<=R);
+
+ Exterior=(r>R);
+
+ V=Interior.*V_interior + Exterior.*V_exterior;
+
+end
+
+% The function computes the potential of the shell
+
+% input values to the function are
+
+% R_interior =inner radius (in m )
+
+% R_exterior = exterior radius(in m )
+
+% density (in kg/m^3)
+
+% X, Y = matrixes
+
+% output of the function
+
+% V = array of potential (in [m2/s2])) 
+
+function [V]=V_shell(R_interior,R_exterior,density,X,Y)
+
+ G=6.67e-11; % in m^3*s^-2*kg-1
+
+ d=sqrt(X.^2+Y.^2);
+
+ 
+
+ V_interior=(2*pi*G*density) .* (R_exterior^2-R_interior^2);
+
+ V_between=(2*pi*G*density) .* (R_exterior^2-d.^2./3) - 4/3 * pi * G * density * R_interior^3 ./ d;
+
+ V_exterior=(4/3*pi*G*density) * (R_exterior^3-R_interior^3) ./ d;
+
+ Interior=(d<=R_interior);
+
+ Between=(d>R_interior & d<R_exterior);
+
+ Exterior=(d>=R_exterior);
+
+ V=Interior.*V_interior + Between.*V_between + Exterior.*V_exterior;
+
+end
+
+% The function computes the attraction of the sphere
+
+% input values to the function are
+
+% X = coordinate of the interval
+
+% Y = coordinate of the interval
+
+% R = radius (in m)
+
+% Xm = Coordinate of X (in m)
+
+% Ym = Coordinate of Y (in m)
+
+% density (in kg/m^3)
+
+% output of the function
+
+% ax, ay = matrix of attraction (in [m/s2]) 
+
+function [ax ay]=a_sphere(X,Y,R,Xm,Ym,density)
+
+ G=6.67e-11; % in m^3*s^-2*kg-1
+
+ r=sqrt((Xm-X).^2+(Ym-Y).^2);
+
+ % r<=R
+
+ ax_interior=(4/3*pi*G*density) .* [(Xm-X)];
+
+ ay_interior=(4/3*pi*G*density) .* [(Ym-Y)];
+
+ % r>R
+
+ ax_exterior=( (4/3*pi*G*density*R^3) ./ ( r .^3) ) .* [(Xm-X)];
+
+ ay_exterior=( (4/3*pi*G*density*R^3) ./ ( r .^3) ) .* [(Ym-Y)];
+
+ Interior=(r<=R);
+
+ Exterior=(r>R);
+
+ ax=Interior.*ax_interior + Exterior.*ax_exterior;
+
+ ay=Interior.*ay_interior + Exterior.*ay_exterior;
+
+end
+
+% The function computes the attraction of the sphere
+
+% input values to the function are
+
+% R_int = radius inner(in m)
+
+% R_ext = radius outer (in m)
+
+% density (in kg/m^3)
+
+% X, Y = matrixes
+
+% output of the function
+
+% ax, ay = matrix of attraction (in [m/s2]) 
+
+function [ax ay]=a_shell(R_interior,R_exterior,density,X,Y)
+
+  G=6.67e-11; % in m^3*s^-2*kg-1
+  
+  % earth coordinates
+    
+  Xe=0; Ye=0; 
+  
+  r=sqrt(X.^2+Y.^2);
+  
+  %r<=R_in:
+  
+  ax_interior=0;
+  
+  ay_interior=0;
+  
+  % r>R_in & r<R_out:
+  
+  ax_between=(4/3*pi*G*density) .* (r.^3-R_interior^3) ./ r.^3 .*[(Xe-X)];
+  
+  ay_between=(4/3*pi*G*density) .* (r.^3-R_interior^3) ./ r.^3 .*[(Ye-Y)];
+  
+  % r>=R_out:
+  
+  ax_exterior=(4/3*pi*G*density) * (R_exterior^3-R_interior^3) ./ r.^3 .*[(Xe-X)];
+  
+  ay_exterior=(4/3*pi*G*density) * (R_exterior^3-R_interior^3) ./ r.^3 .*[(Ye-Y)];
+  
+  Interior=(r<=R_interior);
+  
+  Between=(r>R_interior & r<R_exterior);
+  
+  Exterior=(r>=R_exterior);
+  
+  ax=Interior.*ax_interior + Between.*ax_between + Exterior.*ax_exterior;
+  
+  ay=Interior.*ay_interior + Between.*ay_between + Exterior.*ay_exterior;
+end
