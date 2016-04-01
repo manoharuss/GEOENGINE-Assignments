@@ -1,0 +1,139 @@
+clear all;
+clc;close all;
+format long g
+ 
+%Declaring initial values
+x_int = 1550.00;  %m
+z_int = 2450.00;  %m
+vx_int = 155.55;  %m/s
+vz_int = 490.00;  %m/s
+ 
+g = 9.81;  %m/s^2
+ 
+%Linear ODE
+A_des = [0, 1, 0, 0; 0, 0, 0, 0; 0, 0, 0, 1; 0, 0, 0, 0];
+b_col = [0, 0, 0, -g]';
+%Take m step size 1
+    m = 1;  %s
+for i = 1:100
+    %:::::::::::::::::Applying Runge-Kutta algorithm to solve ODE:::::
+    
+    % computing y0 
+    y(:,1) = [x_int; vx_int; z_int; vz_int];
+    % evaluating value of k1
+    k1(:,i) = A_des*y(:,i) + b_col;
+    % evaluating value of k2
+    d(:,i) = y(:,i) + m*k1(:,i)/2;
+    k2(:,i) = A_des*d(:,i) + b_col;
+    % evaluating value of k3
+    dd(:,i) = y(:,i) - m*k1(:,i) + 2*m*k2(:,i);
+    k3(:,i) = A_des*dd(:,i) + b_col;
+    % evaluating value of  new y or y (n+1)
+    y(:,i+1) = y(:,i) + m*(k1(:,i) + 4*k2(:,i) + k3(:,i))/6;
+    %analytical method
+    Y_a(:,i) = [vx_int*i + x_int; vx_int*ones(1,length(i)); vz_int*i + z_int - g*i^2/2; vz_int - g*i];
+end
+ 
+%Difference between Runge-Kutta algorithm and Analytical method
+difference = Y_a - y(:,2:101);
+ 
+%PLOTS
+figure(1)
+hold on;grid on;
+plot(linspace(0,100,100),difference(1,:),'k','LineWidth',1.5)
+xlabel('Epoch[s]')
+ylabel('x position difference[m]')
+title('x position ')
+
+figure(2)
+hold on;grid on;
+plot(linspace(0,100,100),difference(2,:),'k','LineWidth',2)
+xlabel('Epoch[s]')
+ylabel('Vx velocity difference[m/s]')
+title('Vx velocity ')
+ 
+figure(3)
+hold on;grid on;
+plot(linspace(0,100,100),difference(3,:),'k','LineWidth',1.4)
+xlabel('Epoch[s]')
+ylabel('z position difference[m]')
+title('z position ')
+ 
+figure(4);
+hold on;grid on;
+plot(linspace(0,100,100),difference(4,:),'k','LineWidth',1.4)
+xlabel('Epoch[s]')
+ylabel('Vz velocity difference[m/s]')
+title('Vz velocity ')
+suptitle (' Difference between Analytical method & Runge-Kutta method')
+ 
+figure(5)
+hold on;grid on;
+plot(y(1,2:101),y(3,2:101),'k-','LineWidth',1.2);
+plot(y(1,2),y(3,2),'d');plot(y(1,101),y(3,101),'*');
+xlabel('x[m]---->')
+ylabel('z[m]---->')
+title('Trajectory of point mass in Runge-Kutta method')
+legend('point mass trajectory','intial position','final position')
+ 
+figure(6)
+s(1) = subplot (2,2,1);hold on;grid on;
+plot(linspace(0,100,100),y(1,2:101),'k','LineWidth',1.2)
+xlabel('Epoch[s]')
+ylabel('x position[m]')
+title('x Positions at Different Epochs')
+ 
+s(2) = subplot (2,2,2);hold on;grid on;
+plot(linspace(0,100,100),y(2,2:101),'k','LineWidth',1.2)
+xlabel('Epoch[s]')
+ylabel('Vx velocity [m/s]')
+title('Vx velocity at Different Epochs')
+ 
+s(3) = subplot (2,2,3);hold on;grid on;
+plot(linspace(0,100,100),y(3,2:101),'k','LineWidth',1.2)
+xlabel('Epoch[s]')
+ylabel('z position[m]')
+title('z Positions at Different Epochs')
+ 
+s(4) = subplot (2,2,4);hold on;grid on;
+plot(linspace(0,100,100),y(4,2:101),'k','LineWidth',1.2)
+xlabel('Epoch[s]')
+ylabel('Vz velocity [m/s]')
+title('Vz velocity at Different Epochs')
+suptitle (' Runge-Kutta method solution for ODE')
+ 
+figure(7)
+hold on;grid on;
+plot(Y_a(1,1:100),Y_a(3,1:100),'k-','LineWidth',1.2);
+plot(Y_a(1,1),Y_a(3,1),'d');plot(Y_a(1,100),Y_a(3,100),'*');
+xlabel('x[m]---->')
+ylabel('z[m]---->')
+title('Trajectory of point mass in Analytical method')
+legend('point mass trajectory','intial position','final position')
+ 
+figure(8)
+s(1) = subplot (2,2,1);hold on;grid on;
+plot(linspace(0,100,100),Y_a(1,1:100),'k','LineWidth',1.2)
+xlabel('Epoch[s]')
+ylabel('x position[m]')
+title('x Positions at Different Epochs')
+ 
+s(2) = subplot (2,2,2);hold on;grid on;
+plot(linspace(0,100,100),Y_a(2,1:100),'k','LineWidth',1.2)
+xlabel('Epoch[s]')
+ylabel('Vx velocity [m/s]')
+title('Vx velocity at Different Epochs')
+ 
+s(3) = subplot (2,2,3);hold on;grid on;
+plot(linspace(0,100,100),Y_a(3,1:100),'k','LineWidth',1.2)
+xlabel('Epoch[s]')
+ylabel('z position[m]')
+title('z Positions at Different Epochs')
+ 
+s(4) = subplot (2,2,4);hold on;grid on;
+plot(linspace(0,100,100),Y_a(4,1:100),'k','LineWidth',1.2)
+xlabel('Epoch[s]')
+ylabel('Vz velocity [m/s]')
+title('Vz velocity at Different Epochs')
+suptitle (' Analytical method solution for ODE')
+
