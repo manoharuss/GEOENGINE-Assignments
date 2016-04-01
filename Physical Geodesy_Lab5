@@ -1,0 +1,87 @@
+clear all; close all; clc;
+
+% Load the PREM data (http://geophysics.ou.edu/solid_earth/prem.html)
+
+data_prem=load('density.txt')
+
+r=data_prem(:,1); % radius (in km)
+
+rho=data_prem(:,2); % density (in kg/m^3)
+
+% Plot the Discretised the data
+
+figure(1); hold on; grid on;
+
+plot(r,rho,'b','LineWidth',1.5);
+
+stairs(r,rho,'r','LineWidth',2); 
+
+xlabel('geocentric distance r in [km]'); ylabel('density rho in [kg/m^3]')
+
+title('PREM model:density function rho(r)');
+
+legend('PREM model','Discretised PREM Model');
+
+% Compute the potential and the attraction
+
+G=6.67e-11; % in m^3 s^-2 kg^-1
+
+Re=6370000; % Radius in km
+
+r=[0:400000:12000000, 2*Re] 
+
+R_int=linspace(0,Re-Re/16,16)
+
+R_ext=linspace(Re/16,Re,16)
+
+rho=[13200,13100,13000,12000,11800,11450,11200,10650,10100,5500,5300,5100,4800,4600,3800,3400,zeros(1,16)];
+
+for i=1:1:length(r)/2
+
+[Vt(i,:),at(i,:)] = shell(r,R_int(i),R_ext(i),rho(i));
+
+end
+
+for i=1:1:length(Vt)
+
+ V(i)=sum(Vt(:,i));
+
+ a(i)=sum(at(:,i));
+
+end
+
+figure(2); hold on; grid on;
+
+plot(r,V*1e-4,'k');
+
+plot(r,a*1e3,'b');
+
+stairs(r,rho,'-.g','LineWidth',1.5); 
+
+plot([Re,Re],[0,13500],'r:'); text(Re,12000,'R');
+
+title('Potential and attraction along the radial profile');
+
+xlabel('geocentric distance [m]');
+
+ylabel(' Potential(V)[m2/s2] / a(r)[m/s2]');
+
+legend('Potential [m^2/s^2]','Attraction [m/s^2]','Density [kg/m^3]');
+
+%Compute V and a on the surface
+
+for i=1:1:length(r)/2
+
+ [Vte(i),ate(i)] = shell(Re,R_int(i),R_ext(i),rho(i));
+
+end;
+
+Ve=sum(Vte);
+
+ae=sum(ate);
+
+% Plot the maximum of potential and attraction values on the graph
+
+text( 3600000,max(a)*1e3,'a-max','fontsize',10,'Color','r');
+
+text(0,max(V)*1e-4,'V-max','color','r');
