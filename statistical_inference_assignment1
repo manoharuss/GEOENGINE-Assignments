@@ -1,0 +1,27 @@
+clear all 
+clc
+
+A=[-1 0 0;-1 0 1;0 1 -1;-1 1 0;-1 0 0]
+Y=[7.860;9.140;4.300;13.440;8.357]
+C=[100.459;0;0;0;100.956]
+
+U=[A,Y];% augmentation of Matrices
+
+M=length(A(:,1))% number of observation equals to number of rows in a matrix A
+N=length(A(1,:))% number of unknown equals to number of column of matrix A
+Rank_A=rank(A)% rank of matrix A
+Rank_A_Y=rank(U)% rank of matrix U
+
+
+Y_rev=Y-C
+x_hat=inv(A'*A)*A'*Y_rev
+y_adj=A*x_hat
+y_hat=y_adj+C
+
+e_hat=Y-y_hat
+
+square_sum=e_hat'*e_hat
+orth=A'*e_hat
+
+
+% X=A\Y_rev
