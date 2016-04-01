@@ -1,0 +1,107 @@
+clear all
+format long
+g=9.81;
+%Reading the data
+file=load('data.txt');
+ 
+%:::SLSE:::
+%constructing the design matrix A
+time=file(1:5,1);
+Aug1=[time ones(5,1) zeros(5,1) zeros(5,1)];
+Aug2=[zeros(5,1) zeros(5,1) time ones(5,1)];
+A=[Aug1;Aug2];
+%reduced observations y
+X=file(1:5,2);
+Z=file(1:5,3);
+b=-0.5*g*time.^2;
+Y=[Z-b;X];
+%adjustments
+X_hat(:,1)=A\Y;
+E_hat=Y-A*X_hat(:,1);
+P=diag(ones(1,10));
+sigma_2=(E_hat'*P*E_hat)/6
+cov_i(:,:,1)=(1/sigma_2)*(A'*P*A);
+%constructing covariance matrix
+cov_x(:,:,1)=cov_i(:,:,1)^-1;
+stdev(:,1)=diag(sqrt(cov_x(:,:,1)));
+ 
+
+P=1;
+for i=2:1:length(file(:,1))-4
+%design matrix A
+time=file(4+i,1);
+Aug1=[time 1 0 0];
+Aug2=[0 0 time 1];
+A=[Aug1;Aug2];
+%reduced observations y
+X=file(4+i,2);
+Z=file(4+i,3);
+b=-0.5*g*time.^2;
+Y=[Z-b;X];
+%adjustments
+dx_hat=(sigma_2*cov_i(:,:,i-1)+A'*P*A)^-1*A'*P*(Y-A*X_hat(:,i-1));
+X_hat(:,i)=X_hat(:,i-1)+dx_hat;
+aux=sigma_2;
+sigma_2=(1/(4+2*i))*(sigma_2*(2+2*i+dx_hat'*cov_i(:,:,i-1)*dx_hat)...
+    +(Y-A*X_hat(:,i))'*P*(Y-A*X_hat(:,i)))
+cov_i(:,:,i)=(1/sigma_2)*(aux*cov_i(:,:,i-1)+A'*P*A);
+%constructingcovariance matrix
+cov_x(:,:,i)=cov_i(:,:,i)^-1;
+stdev(:,i)=diag(sqrt(cov_x(:,:,i)));
+end
+ 
+ 
+%plots
+figure(1)
+plot(1:1:100-4,X_hat(1,:),'r','LineWidth',1.5)
+xlabel 'Sequence'
+ylabel 'vz(to) in m/sec'
+figure(2)
+plot(1:1:100-4,X_hat(3,:),'r','LineWidth',1.5)
+xlabel 'Sequence'
+ylabel 'vx(to) in m/sec'
+figure(3)
+plot(1:1:100-4,stdev(1,:),'-k',...
+    1:1:100-4,stdev(3,:),'r','LineWidth',1.5)
+xlabel 'Sequence'
+ylabel('Standard deviation')
+legend('vz(to) in m/sec','vx(to) in m/sec')
+figure(4)
+plot(1:1:100-4,stdev(2,:),'-k',...
+    1:1:100-4,stdev(4,:),'r','LineWidth',1.5)
+xlabel 'Sequence'
+ylabel('standard deviation')
+legend('z(to) in m','x(to) in m')
+figure(5)
+plot(1:1:100-4,X_hat(2,:),'r','LineWidth',1.5)
+xlabel 'Sequence'
+ylabel 'z(to) in m'
+figure(6)
+plot(1:1:100-4,X_hat(4,:),'r','LineWidth',1.5)
+xlabel 'Sequence'
+ylabel 'x(to) in m'
+ 
+%:::LSE:::
+%constructing the design matrix A
+time=file(:,1);
+n=length(time);
+Aug1=[time ones(n,1) zeros(n,1) zeros(n,1)];
+Aug2=[zeros(n,1) zeros(n,1) time ones(n,1)];
+A=[Aug1;Aug2];
+%reduced observations y
+X=file(:,2);
+Z=file(:,3);
+b=-0.5*g*time.^2;
+Y=[Z-b;X];
+%adjustments
+X_hat=A\Y;
+E_hat=Y-A*X_hat;
+P=diag(ones(1,2*n));
+sigma_2=(E_hat'*P*E_hat)/(2*n-4);
+cov_X=sigma_2*(A'*P*A)^-1;
+stdevX=diag(sqrt(cov_X));
+ 
+ 
+ 
+
+
