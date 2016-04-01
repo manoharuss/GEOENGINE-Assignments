@@ -1,0 +1,50 @@
+% Relative Gravimetry
+close all
+clear all
+clc
+format long 
+
+[filename, pathname] = uigetfile('*.txt', 'Please select a text file');
+% we import the data of the calculated data from excel is imported to a text file 
+fullFileName = fullfile(pathname,filename);
+
+data = load(fullFileName);
+[r c] = size(data);
+
+Y = data(:,2);% Observation matrix
+
+k = [1 0;0 0;1 0;0 1;1 0;0 1];
+
+A = [k , data(:,3)];% Coefficient  matrix
+
+ 
+%Least Square Model
+
+x_hat=A\Y 
+%unknown matrix 
+Y_hat=A*x_hat
+%Adjusted observation matrix
+e=Y-Y_hat;
+% residual matrix
+sigma2=e'*e/3
+% vaiance
+sigma=sqrt(sigma2)% standard deviation
+D=sigma2*inv(A'*A);% variance matrix
+sigma_g13=sqrt(D(1,1))
+sigma_g16=sqrt(D(2,2))
+sigma_d=sqrt(D(3,3))
+div = sigma_d/x_hat(3)
+ 
+%  gravity gradient (free air)
+
+sigma_dg=sqrt(diag(D));
+del_h=[6.897;17.26]
+gradient_t =x_hat(1:2)./del_h
+sigma_h=0.03;
+sigma_t=sqrt((sigma_dg(1:2)./del_h).^2+(sigma_h*x_hat(1:2)./del_h.^2).^2)
+ 
+% gravity gradient (spherical model)
+
+GM=3.986004415e14;
+R=6371000;
+gradient_earth=-2*10^5*GM/R^3
